@@ -1,0 +1,4 @@
+(library
+  (name lokto_xchacha20)
+  (public_name lokto_xchacha20)
+  (libraries mirage-crypto))

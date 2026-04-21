@@ -79,15 +79,20 @@ let hchacha20 key nonce =
   Bytes.unsafe_to_string bytes
 
 let xchacha20_key_nonce key nonce =
+  if String.length key <> 32 || String.length nonce <> 24 then
+    invalid_arg "xchacha20: key must be 32 bytes, nonce 24 bytes";
+
   let first_16_bytes_of_nonce = String.sub nonce 0 16 in
   let last_8_bytes_of_nonce = String.sub nonce 16 8 in
   let subkey = hchacha20 key first_16_bytes_of_nonce in
   (subkey, last_8_bytes_of_nonce)
 
 let authenticate_encrypt ~key ~nonce ?(aad = "") plaintext =
-  if String.length key <> 32 || String.length nonce <> 24 then
-    invalid_arg "xchacha20: key must be 32 bytes, nonce 24 bytes";
-
   let key, nonce = xchacha20_key_nonce key nonce in
   let key = Mirage_crypto.Chacha20.of_secret key in
   Mirage_crypto.Chacha20.authenticate_encrypt ~key ~nonce ~adata:aad plaintext
+
+let authenticate_decrypt ~key ~nonce ?(aad = "") ciphertext =
+  let key, nonce = xchacha20_key_nonce key nonce in
+  let key = Mirage_crypto.Chacha20.of_secret key in
+  Mirage_crypto.Chacha20.authenticate_decrypt ~key ~nonce ~adata:aad ciphertext
